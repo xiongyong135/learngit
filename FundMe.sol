@@ -68,13 +68,15 @@ contract FundMe{
         return ethAmount * price / (10 ** 8);
     }
 
+    function transferOwner(address newOwner) public onlyOwner {
+        owner = newOwner;
+    }
+
     // 提款，锁定期满，金额满足，owner可以提款将合约余额转到用户余额
-    function getFund() external {
+    function getFund() external windowClosed onlyOwner {
         uint contractBalance = address(this).balance;
         address sender = msg.sender;
         require(convertEth2USD(contractBalance) >= TARGET_AMOUNT, "Not Reach Target Amount!");
-        require(owner == sender, "you are not the owner!");
-        require(block.timestamp >= deployTime + lockTime, "window is closed!");
 
         // transfer
         // payable (sender).transfer(contractBalance);
@@ -89,18 +91,28 @@ contract FundMe{
     }
 
     // 退款，锁定期满，如果目标未达成，则投资用户可以提走自己的投资金额
-    function refund() external {
+    function refund() external windowClosed {
         address myAddress = msg.sender;
         uint contractBalance = address(this).balance;
         require(contractBalance < TARGET_AMOUNT, "Target is reached!");
         uint myContractAmount = funderToAmount[myAddress];
         require(myContractAmount > 0, "you have no balance in this contract!");
-        require(block.timestamp >= deployTime + lockTime, "window is closed!");
 
         bool success;
         (success, ) = payable (myAddress).call{value: myContractAmount}("");
         require(success, "Failed!");
         funderToAmount[myAddress] = 0;
+    }
+
+    modifier windowClosed() {
+        require(block.timestamp >= deployTime + lockTime, "window is closed!");
+        // 业务方法在require后执行
+        _;
+    }
+
+    modifier onlyOwner() {
+        require(owner == msg.sender, "you are not the owner!");
+        _;
     }
 
 }
