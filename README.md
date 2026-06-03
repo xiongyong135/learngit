@@ -1,4 +1,7 @@
-# 学习后部署的业务合约和erc20 token合约
+# 学习文档github地址
+https://github.com/xiongyong135/learngit
+
+# 测试链部署的业务合约和 erc20 token合约
 https://sepolia.etherscan.io/token/0x1130dee123d7a1ced470f5c555e1ff2c2a762ddc#code
 https://sepolia.etherscan.io/address/0x3e5B3D17C11975321da5b8B1D3D426ef94D5d9fE
 
