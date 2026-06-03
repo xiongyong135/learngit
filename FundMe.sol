@@ -16,10 +16,13 @@ contract FundMe{
     uint TARGET_AMOUNT = 10 * 10 ** 18;  // 10 USD
 
     address public  owner;
+    address erc20TokenAddr;
+    bool public getFundSuccess = false;
 
     uint deployTime;
     uint lockTime;
 
+    // 构造函数，部署合约时指定
     constructor (uint _lockTime) {
         // sepolia testnet
         priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
@@ -28,14 +31,29 @@ contract FundMe{
         lockTime = _lockTime;
     }
 
+    // 筹款，募集资金。锁定期内
     function fund() external payable {
         uint amount = msg.value;
         uint usdAmount = convertEth2USD(amount);
         require(usdAmount >= MIN_AMOUNT, "USD Amount too low!");
         require(block.timestamp < deployTime + lockTime, "window is closed!");
         // require(amount >= MIN_AMOUNT, "Amount too low!");
-
         funderToAmount[msg.sender] += msg.value;
+    }
+
+    function funderAmount(address addr) public view returns (uint) {
+        return funderToAmount[addr];
+    }
+
+    // 减少金额。只允许fundMeToken合约调用
+    function setfunderAmount(address addr, uint amount) external  {
+        require(msg.sender == erc20TokenAddr, "you are not the erc20 contract!");
+        funderToAmount[addr] = amount;
+    }
+
+        // 设置erc20合约地址。只有owner可以
+    function setERC20Addr(address addr) public onlyOwner {
+        erc20TokenAddr = addr;
     }
 
     /**
@@ -88,6 +106,7 @@ contract FundMe{
         (success, ) = payable (sender).call{value: contractBalance}("");
         require(success, "Failed!");
         funderToAmount[sender] = 0;
+        getFundSuccess = true;
     }
 
     // 退款，锁定期满，如果目标未达成，则投资用户可以提走自己的投资金额

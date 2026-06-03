@@ -11,7 +11,34 @@ import {FundMe} from "./FundMe.sol";
 
 contract FundTokenERC20 is ERC20 {
 
-    constructor() ERC20("FundTokenERC20", "FTE") {
+    FundMe fundMe;
+
+    constructor(address fundMeContractAddr) ERC20("FundTokenERC20", "FTE") {
+        fundMe = FundMe(fundMeContractAddr);
+    }
+
+    function mint(uint amount) public getFundSuccess{
+        // 每个用户都可以调用，会做权限校验：拥有fundMe的用户可以铸币发放
+        // require(fundMe.funderAmount(msg.sender) > amount, "you have no amount in fundMe!");
+        require(fundMe.funderToAmount(msg.sender) >= amount, "you have no amount in fundMe!");
+
+        // 发放token
+        _mint(msg.sender, amount);
+        // fundMe 数量同步减少
+        fundMe.setfunderAmount(msg.sender, fundMe.funderAmount(msg.sender) - amount);
 
     }
+
+    // 将erc20 token 兑换 领奖
+    function claim(uint amount) public getFundSuccess{
+        require(balanceOf(msg.sender) >= amount, "you have not enough balance");
+        /** 做一些奖励逻辑处理 **/
+        _burn(msg.sender, amount);
+    }
+
+    modifier getFundSuccess() {
+        require(fundMe.getFundSuccess(), "you must wait the fundMe end!");
+        _;
+    }
+
 }
