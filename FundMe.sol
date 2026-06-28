@@ -5,7 +5,7 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
 
 // 1.创建一个收款函数
 // 2.记录投资人并查看
-// 3.在锁定期内，达到目标值，生产商可以提款
+// 3.在锁定期内，达到目标值，生产商可以提款。投资人可以mint token
 // 4.在锁定期内，没有达到目标值，投资人在锁定期以后退款
 contract FundMe{
     mapping (address => uint) public funderToAmount;
